@@ -41,6 +41,7 @@ const Markdown = (function () {
             this.images();
             this.anchors();
             this.paragraphs();
+            this.br();
         }
 
         this.readBlockUnit = function (){
@@ -62,7 +63,7 @@ const Markdown = (function () {
                 if(line.match(/(\#+)/gm)){
                     convertedHTML[id] = line.replace(/[\s\n]*(\#*)(.+)/gm, (a,$1,$2)=>{
                         let count = $1.split('').length;
-                        return `<h${count}${options.h?` class="h${count}"`:''}>${$2.replace(/[\s]*/g, '')}</h${count}>`
+                        return `<h${count}${options.h?` class="h${count}"`:''}>${$2.replace(/^[\s]*/g, '')}</h${count}>`
                     });
                     block[id] = '';
                 }
@@ -266,6 +267,12 @@ const Markdown = (function () {
                     convertedHTML[id] = `<p>${line}</p>`;
                     block[id] = '';
                 }
+            });
+        }
+
+        this.br = function (){
+            convertedHTML = convertedHTML.map(x=>{
+                return x.replace(/\s{3,}/gm, '<br>');
             });
         }
     }
