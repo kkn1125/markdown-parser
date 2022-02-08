@@ -17,7 +17,7 @@ const Markdown = (function () {
     }
 
     function Model() {
-        const INDENT = 4;
+        let INDENT = 4;
         let views;
         let options;
         let md;
@@ -28,20 +28,30 @@ const Markdown = (function () {
         this.init = function (view, option) {
             views = view;
             options = option;
+
+            if(options.hasOwnProperty('indent')) INDENT = options.indent;
             md = views.getMd();
             this.parse();
-            views.renderView(temp, convertedHTML.join(''));
+            if(options.raw){
+                return views.renderView(convertedHTML.join(''), temp);
+            } else {
+                return views.renderView(temp, convertedHTML.join(''));
+            }
+            // return convertedHTML.join('');
         }
 
         this.parse = function () {
             this.readBlockUnit();
-            this.raw();
+            // this.raw();
             this.heading();
             this.blockListify();
             this.images();
             this.anchors();
             this.paragraphs();
             this.br();
+            this.italicBold();
+            this.altImages();
+            this.altAnchors();
         }
 
         this.readBlockUnit = function (){
@@ -51,8 +61,9 @@ const Markdown = (function () {
 
         this.raw = function (){
             block.forEach((line, id)=>{
-                if(line.match(/:raw([\s\S]+):rawend/gm)){
-                    convertedHTML[id] = `<p>${line.match(/:raw([\s\S]+):rawend/)[1]}</p>`;
+                console.log(line)
+                if(line.match(/\:raw([\s\S]+)\:endraw/gm)){
+                    convertedHTML[id] = `<p>${line.match(/\:raw([\s\S]+)\:endraw/)[1]}</p>`;
                     block[id] = '';
                 }
             });
@@ -72,62 +83,48 @@ const Markdown = (function () {
 
         this.blockListify = function (){
             let indent = 0, before = -1;
-            let count = 0;
-            let isDouble = 1;
-            let tag = '';
             let array = [];
 
             block.forEach((line, id)=>{
-                if(line.match(/\s*\>\s/gm) || line.match(/\s*\-/gm) || line.match(/\s*[0-9]+\./gm)){
-                    convertedHTML[id] = line.split(/\n/gm).filter(x=>x!='').map(x=>{
+                if(line.match(/^\s*\>\s/gm) || line.match(/^\s*\-/gm) || line.match(/^\s*[0-9]+\./gm)){
+                    convertedHTML[id] = line.split(/\n/gm).filter(x=>x!='').map(li=>{
                         let temp = '';
-                        let space = x.match(/(^\s*)/gm)[0];
+                        let space = li.match(/(^\s*)/)[1];
                         
                         indent = space.length;
 
-                        if(indent>0 && before==-1){
-                            isDouble++;
-                        } else {
-                            isDouble = 1;
-                        }
-                        
-                        if(x.match(/^\s*\-/gm)){
-                            tag = 'ul';
-                            array.push(tag);
-                            // tag = '';
-                        }
-                        if(x.match(/^\s*[0-9]+\./gm)){
-                            tag = 'ol';
-                            array.push(tag);
-                            // tag = '';
-                        }
-                        if(x.match(/^\s*\>\s/gm)){
-                            tag = 'blockquote';
-                            array.push(tag);
-                            // tag = '';
-                        }
-
-                        if(indent > before){
-                            count++;
-                            temp += `<${array[array.length-1]} ${options[tag]?`class="${options[tag]}"`:''}>`.repeat(isDouble);
-                        } else if(indent == before) {
-
-                        } else {
-                            let gap = parseInt(before/indent);
-                            for(let i=0;i<gap;i++){
+                        if(indent>before){
+                            let gap = 0;
+                            if(indent > 0 && before == -1){
+                                gap = parseInt(indent/INDENT) + 1;
+                            } else {
+                                gap = parseInt((indent - before)/INDENT)+(before>-1?0:1);
+                            }
+                            for(let i=0; i<gap; i++){
+                                if(li.match(/^\s*\-/gm)){
+                                    array.push('ul');
+                                }
+                                if(li.match(/^\s*[0-9]+\./gm)){
+                                    array.push('ol');
+                                }
+                                if(li.match(/^\s*\>\s/gm)){
+                                    array.push('blockquote');
+                                }
+                                temp += `<${array[array.length-1]} class="${options[array[array.length-1]]}">`;
+                            }
+                        } else if(indent < before){
+                            let gap = parseInt((before - indent)/INDENT);
+                            for(let i=0; i<gap; i++){
                                 temp += `</${array.pop()}>`;
                             }
-                            temp += `<${array[array.length-1]} ${options[tag]?`class="${options[tag]}"`:''}>`;
-                            count--;
                         }
 
-                        
-                        if(array[array.length-1] == 'blockquote'){
-                            temp += `${this.checkbox(x.replace(/\s*\>\s/gm, ''))}`;
+                        if(li.match(/^\s*\>\s.+/g)){
+                            temp += `${this.checkbox(li.replace(/^\s*\>\s(.+)/gm, '$1'))}`;
                         } else {
-                            temp += `<li ${options.li?`class="${options.li}"`:''}>${this.checkbox(x.replace(/\s*[0-9]\.\s*/gm, '').replace(/\s*\-\s*/gm, ''))}</li>`;
+                            temp += `<li>${this.checkbox(li.replace(/^\s*[0-9]\.\s*(.+)/gm, '$1').replace(/^\s*\-\s*(.+)/gm, '$1'))}</li>`;
                         }
-
+                        
                         before = indent;
                         return temp;
                     }).join('\n');
@@ -138,57 +135,9 @@ const Markdown = (function () {
                 }
                 indent = 0;
                 before = -1;
-                count = 0;
                 array = [];
             });
         }
-
-        // this.orderedList = function (){
-        //     let indent = 0, before = -1;
-        //     let count = 0;
-        //     let isDouble = 1;
-        //     block.forEach((line, id)=>{
-        //         if(line.match(/\s*[0-9]+\./gm)){
-        //             convertedHTML[id] = line.split(/\n/gm).map(x=>{
-        //                 let temp = '';
-        //                 let space = x.match(/(^\s*)/gm)[0];
-                        
-        //                 indent = space.length;
-
-        //                 if(indent>0 && before==-1){
-        //                     isDouble++;
-        //                 } else {
-        //                     isDouble = 1;
-        //                 }
-                        
-        //                 if(indent > before){
-        //                     count++;
-        //                     temp += `<ol>`.repeat(isDouble);
-        //                 } else if(indent == before) {
-
-        //                 } else {
-        //                     temp += '</ol>';
-        //                     count--;
-        //                 }
-
-        //                 if(indent<before){
-        //                     temp += `</ol><ol>`;
-        //                 }
-                        
-        //                 temp += `<li>${this.checkbox(x.replace(/\s*[0-9]\.\s*/gm, ''))}</li>`;
-
-        //                 before = indent;
-        //                 isDouble = 1;
-        //                 return temp;
-        //             }).join('\n');
-        //             convertedHTML[id] += '</ol>'.repeat(count+1);
-        //             block[id] = '';
-        //         }
-        //         indent = 0;
-        //         before = -1;
-        //         count = 0;
-        //     });
-        // }
 
         this.checkbox = function(str){
             let ox = str.match(/\[\s?(x?)\s?\]/);
@@ -196,67 +145,42 @@ const Markdown = (function () {
             else return str;
         }
 
-        // this.blockquote = function (){
-        //     let indent = 0, before = -1;
-        //     let count = 0;
-        //     let isDouble = 1;
-        //     block.forEach((line, id)=>{
-        //         if(line.match(/\s*\>\s/gm)){
-        //             convertedHTML[id] = line.split(/\n/gm).map(x=>{
-        //                 let temp = '';
-        //                 let space = x.match(/(^\s*)/gm)[0];
-        //                 indent = space.length;
-
-        //                 if(indent>0 && before==-1){
-        //                     isDouble++;
-        //                 } else {
-        //                     isDouble = 1;
-        //                 }
-                        
-        //                 if(indent > before){
-        //                     count++;
-        //                     temp += `<blockquote>`.repeat(isDouble);
-        //                 } else if(indent == before) {
-
-        //                 } else {
-        //                     temp += '</blockquote>';
-        //                     count--;
-        //                 }
-
-        //                 if(indent<before){
-        //                     temp += `</blockquote><blockquote>`;
-        //                 }
-                        
-        //                 temp += `${x.replace(/\s*\>\s/gm, '')}`;
-
-        //                 before = indent;
-        //                 return temp;
-        //             }).join('\n');
-        //             convertedHTML[id] += '</blockquote>'.repeat(count+1);
-        //             block[id] = '';
-        //         }
-        //         indent = 0;
-        //         before = -1;
-        //         count = 0;
-        //     });
-        // }
-
         this.images = function (){
             block.forEach((line, id)=>{
-                if(line.match(/^\!\[/gm)){
+                if(line.match(/\!\[/gm)){
                     const [a,$1,$2,$3] = line.match(/\!\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣]+)(\s.+)?\)/);
-                    convertedHTML[id] = `<img src="${$2}" alt="${$1}"${$3?` title="${$3.replace(/[\'\"]+/gm,'').trim()}"`:''}>`;
+                    convertedHTML[id] = `<figure><img src="${$2}" alt="${$1}"${$3?` title="${$3.replace(/[\'\"]+/gm,'').trim()}"`:''}></figure>`;
                     block[id] = '';
+                }
+            });
+        }
+
+        this.altImages = function (){
+            convertedHTML.forEach((line, id)=>{
+                if(line.match(/\!\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣]+)(\s.+)?\)/gm)){
+                    const [a,$1,$2,$3] = line.match(/\!\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣]+)(\s.+)?\)/);
+                    convertedHTML[id] = convertedHTML[id].replace(/\!\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣]+)(\s.+)?\)/gm, `<figure><img src="${$2}" alt="${$1}"${$3?` title="${$3.replace(/[\'\"]+/gm,'').trim()}"`:''}></figure>`);
+                    // block[id] = '';
                 }
             });
         }
 
         this.anchors = function (){
             block.forEach((line, id)=>{
-                if(line.match(/^\!\[/gm)){
-                    const [a,$1,$2,$3] = line.match(/\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣]+)(\s.+)?\)/);
+                if(line.match(/\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣]+)(\s.+)?\)/gm)){
+                    const [a,$1,$2,$3] = line.match(/\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣]+)(\s.+)?\)/m);
                     convertedHTML[id] = `<a href="${$2}"${$3?` title="${$3.replace(/[\'\"]+/gm,'').trim()}"`:''}>${$1}</a>`;
                     block[id] = '';
+                }
+            });
+        }
+
+        this.altAnchors = function (){
+            convertedHTML.forEach((line, id)=>{
+                if(line.match(/\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣]+)(\s.+)?\)/gm)){
+                    const [a,$1,$2,$3] = line.match(/\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣]+)(\s.+)?\)/m);
+                    convertedHTML[id] = convertedHTML[id].replace(/\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣]+)(\s.+)?\)/gm,`<a href="${$2}"${$3?` title="${$3.replace(/[\'\"]+/gm,'').trim()}"`:''}>${$1}</a>`);
+                    // block[id] = '';
                 }
             });
         }
@@ -265,7 +189,7 @@ const Markdown = (function () {
             block.forEach((line, id)=>{
                 if(line!=''){
                     convertedHTML[id] = `<p>${line}</p>`;
-                    block[id] = '';
+                    // block[id] = '';
                 }
             });
         }
@@ -273,6 +197,16 @@ const Markdown = (function () {
         this.br = function (){
             convertedHTML = convertedHTML.map(x=>{
                 return x.replace(/\s{3,}/gm, '<br>');
+            });
+        }
+
+        this.italicBold = function (){
+            convertedHTML = convertedHTML.map(x=>{
+                if(/(\*+)([\s\S]+?)\*+/g)
+                return x.replace(/(\*{1,3})([\s\S]+?)\*{1,3}/g, (a,$1,$2)=>{
+                    return `${$1.length==2?`<em>`:`<b>${$1.length==3?`<em>`:``}`}${$2}${$1.length!=2?`</b>${$1.length==3?`</em>`:``}`:`</em>`}`
+                });
+                else return x;
             });
         }
     }
@@ -289,8 +223,7 @@ const Markdown = (function () {
         }
 
         this.renderView = function (md, convertedHTML) {
-            document.body.insertAdjacentHTML('beforeend', md.join('<br>'));
-            document.body.insertAdjacentHTML('beforeend', convertedHTML);
+            return convertedHTML;
         }
     }
     return {
@@ -300,16 +233,87 @@ const Markdown = (function () {
             const controller = new Controller();
 
             view.init(str);
-            model.init(view, options);
+            let a = model.init(view, options);
             controller.init(model);
+            return a;
+        },
+        parsed(str, options) {
+            const view = new View();
+            const model = new Model();
+            const controller = new Controller();
+
+            view.init(str);
+            let a = model.init(view, options);
+            controller.init(model);
+            return a;
         }
     }
 })();
 
-Markdown.parse(test, {
+document.querySelector('main').innerHTML = Markdown.parse(test, {
     ol: 'list-group reset',
     ul: 'list-group reset',
     li: 'list-item',
     blockquote: 'blockquote blockquote-info',
-    h: true,
+    h: false,
+    indent: 4,
+});
+
+document.querySelector('textarea.md-list').value = `## 블록 & 리스트 혼합 계층
+
+> 현재 파서는 테이블 외 기능을 지원합니다.
+    > 계층화도 지원합니다.
+        1. 리스트 및 블록이 계층화 대상이 됩니다.
+        2. 사용방법은 동일합니다.
+    > 포함 범위와 단락을 나누는 기준은 기존의 마크다운과 조금씩 다를 수 있습니다.
+> 파싱을 테스트하는 현재 텍스트는 js파일에 작성되어 있으며, 코드가 궁금하시다면 저장소의 코드를 확인 바랍니다.`;
+
+document.querySelector('div.origin').innerHTML = `
+## 블록 & 리스트 혼합 계층
+
+> 현재 파서는 테이블 외 기능을 지원합니다.
+    > 계층화도 지원합니다.
+        1. 리스트 및 블록이 계층화 대상이 됩니다.
+        2. 사용방법은 동일합니다.
+    > 포함 범위와 단락을 나누는 기준은 기존의 마크다운과 조금씩 다를 수 있습니다.
+> 파싱을 테스트하는 현재 텍스트는 js파일에 작성되어 있으며, 코드가 궁금하시다면 저장소의 코드를 확인 바랍니다.`
+
+let optionIndent = 4;
+
+document.querySelector('#indent').addEventListener('change', (ev)=>{
+    const sel = ev.target.value;
+    optionIndent = parseInt(sel);
+    document.querySelector('div.md-list').innerHTML = '';
+    document.querySelector('div.md-list').innerHTML = Markdown.parsed(document.querySelector('textarea.md-list').value||'Markdown Test', {
+        ol: 'list-group reset',
+        ul: 'list-group reset',
+        li: 'list-item',
+        blockquote: 'blockquote blockquote-info',
+        h: false,
+        indent: optionIndent,
+    });
+})
+
+window.addEventListener('keyup', (ev)=>{
+    const target = ev.target;
+    document.querySelector('div.md-list').innerHTML = '';
+    document.querySelector('div.converted').innerHTML = Markdown.parsed(document.querySelector('textarea.md-list').value||'Markdown Test', {
+        ol: 'list-group reset',
+        ul: 'list-group reset',
+        li: 'list-item',
+        blockquote: 'blockquote blockquote-info',
+        h: false,
+        indent: optionIndent,
+        raw: false,
+    });
+    
+    document.querySelector('div.origin').innerHTML = Markdown.parsed(document.querySelector('textarea.md-list').value||'Markdown Test', {
+        ol: 'list-group reset',
+        ul: 'list-group reset',
+        li: 'list-item',
+        blockquote: 'blockquote blockquote-info',
+        h: false,
+        indent: optionIndent,
+        raw: true,
+    });
 });
