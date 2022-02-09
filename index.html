@@ -5,127 +5,15 @@
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kkn1125/penli@dabfbd0/docs/assets/css/penli.css"
-            integrity="sha384-GRlAVG2hpmCsp6fahietb2fYclf6GcPQ//SP/cbgU5fXb/XnuNXgcBtiDnxsfWZn" crossorigin="anonymous">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kkn1125/penli@dabfbd0/docs/assets/css/penli.theme.css"
-            integrity="sha384-01r009YpiICsv6vC6VOYlFkAXL3fvSbJWvj4y6IFDQ5ydtcsROidPN6OZ4pHTz8m" crossorigin="anonymous">
-        <style>
-            * {
-                user-select: none;
-            }
-
-            html,
-            body {
-                width: 100%;
-                margin: 0;
-            }
-
-            main {
-                width: 85%;
-                margin: auto;
-            }
-
-            blockquote {
-                border-left: 5px solid gray;
-                margin-left: 0;
-                padding-left: 2rem;
-                padding-top: 1rem;
-                padding-bottom: 1rem;
-                background-color: rgb(230, 230, 230);
-            }
-
-            figure>img {
-                width: 95%;
-            }
-
-            figure {
-                text-align: center;
-            }
-
-            h1 {
-                font-size: 2.5em;
-            }
-
-            h2 {
-                font-size: 2em;
-            }
-
-            h3 {
-                font-size: 1.75em;
-            }
-
-            h4 {
-                font-size: 1.5em;
-            }
-
-            h5 {
-                font-size: 1.25em;
-            }
-
-            h6 {
-                font-size: 1em;
-            }
-
-            h1,
-            h2,
-            h3,
-            h4,
-            h5,
-            h6 {
-                font-weight: bold;
-            }
-
-            ul.reset {
-                list-style-type: disc;
-                list-style-position: inside;
-            }
-
-            ol.reset {
-                list-style-type: decimal;
-                list-style-position: inside;
-            }
-
-            .reset li {
-                padding: 0.2rem 0 0.2rem 0;
-            }
-
-            ul.reset ul,
-            ol.reset ul {
-                list-style-type: circle;
-                list-style-position: inside;
-                margin-left: 15px;
-                padding: 0;
-            }
-
-            ol.reset ol,
-            ul.reset ol {
-                list-style-type: lower-latin;
-                list-style-position: inside;
-                margin-left: 15px;
-                padding: 0;
-            }
-
-            div.md-list{
-                padding: 1rem;
-                border: 1px solid gray;
-                border-radius: .5rem;
-            }
-            b{
-                font-weight: bold;
-            }
-            em{
-                font-style: italic;
-            }
-        </style>
+        <link rel="stylesheet" href="src/style/main.css">
         <title>Document</title>
     </head>
 
     <body>
         <main></main>
-        <script src="https://cdn.jsdelivr.net/gh/kkn1125/penli@dabfbd0/docs/assets/js/penli.js"
-            integrity="sha384-v8IcF+Ajik1Du5Pn4UGwOVizMisxuU6LhXVsWYy1WdP2+1MxTdeJRHuYeDAdtQ6v" crossorigin="anonymous">
-        </script>
-        <script src="./mdParser.js" type="module"></script>
+        <script src="./src/core/mdParser.js" type="module"></script>
+        <script src="./src/script/test.js" type="module"></script>
+        <script src="./src/script/main.js" type="module"></script>
     </body>
 
 </html>
