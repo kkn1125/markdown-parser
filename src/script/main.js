@@ -48,7 +48,7 @@ window.addEventListener('keyup', (ev)=>{
     const target = ev.target;
     document.querySelector('div.md-list').innerHTML = '';
 
-    document.querySelector('div.converted').innerHTML = Markdown.test(target.value||'Markdown Test', {
+    document.querySelector('div.converted').innerHTML = Markdown.test(document.querySelector("body > main > textarea").value||'Markdown Test', {
         ol: 'list-group reset',
         ul: 'list-group reset',
         li: 'list-item',

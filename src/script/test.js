@@ -40,15 +40,28 @@ export const test = `
 자바스크립트 코드블럭 테스트
 
 \`\`\`javascript
-var test = 123;
-let wow = ['aqwe', 123];
+var test = vart;
+let wow = ['aqwe', 123]; // qwe
+
+for(let i = 0; i < 5; i++;){
+    console.log(i);
+}
 
 function test(a){
-    const test = ["a","b"];
+    const test = ["a","b"]; // qe
     if(test){
         return qwe;
     }
     return 123;
+}
+/* qweqwe */
+
+/**
+ * test
+ * /
+
+let test = (a) => {
+    console.log(123);
 }
 \`\`\`
 

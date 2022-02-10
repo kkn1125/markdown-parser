@@ -77,7 +77,7 @@ const Markdown = (function () {
                         return `<pre class="parse-code"><code class="number" lang="${lang.trim()}">${new Array(lines.length).fill(0).map((l,i)=>`<div class="token line">${lines[i].innerHTML==''?'':lcount++}</div>`).join('')}</code><code lang="${lang.trim()}">${contents}</code></pre>`;
                     }
                 });
-            }
+            } else return md;
         }
 
         this.altImages = function (){
@@ -125,6 +125,18 @@ const Markdown = (function () {
             //     else return x;
             // });
         }
+
+        this.addClass = function (str){
+            let classes;
+            if(str.match(/\{\:(.+)\}/g)){
+                classes = str.match(/\{\:(.+)\}/)[1];
+                str = str.replace(/\{\:(.+)\}/g,'');
+
+                return classes.split('.').filter(x=>x!='').join(' ');
+            } else {
+                return null;
+            }
+        }
     }
 
     return {
@@ -135,7 +147,6 @@ const Markdown = (function () {
         },
         test(str, options) {
             const parser = new Parser();
-
             return parser.init(str, options);
         }
     }
