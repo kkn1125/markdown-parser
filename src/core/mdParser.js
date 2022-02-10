@@ -108,6 +108,7 @@ const Markdown = (function () {
 
         this.italicBold = function (){
             convertedHTML = convertedHTML.map(x=>{
+                console.log(x);
                 if(/(\*+)([\s\S]+?)\*+/g)
                 return x.replace(/(\*{1,3})([\s\S]+?)\*{1,3}/g, (a,$1,$2)=>{
                     return `${$1.length==2?`<em>`:`<b>${$1.length==3?`<em>`:``}`}${$2}${$1.length!=2?`</b>${$1.length==3?`</em>`:``}`:`</em>`}`

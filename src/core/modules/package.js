@@ -3,7 +3,7 @@
 export const horizontal = function (block, convertedHTML, options){
     block.forEach((line, id)=>{
         if(line.match(/(\-{3,}|\*{3,}|\={3,})/gm)){
-            convertedHTML[id] = line.replace(/\-{3,}|\*{3,}|\={3,}/gm, (a,$1,$2)=>{
+            convertedHTML[id] = line.replace(/^(\-{3,}|\={3,}|\*{3,})(?=\s*)$/gm, (a,$1,$2)=>{
                 return `<hr class="hr">`
             });
             block[id] = '';
