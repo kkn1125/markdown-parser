@@ -129,7 +129,6 @@ export default (function(){
                                                                         return `<span class="token sc">;</span>`
                                                                     } else {
                                                                         return x.replace(/\(([\s\S]+)?\)(\[[\s\S]+\])?/g, (a, $1, $2, $3)=>{
-                                                                            console.log($3)
                                                                             return `<span class="token braket">(</span>`
                                                                             + ($1
                                                                             ?`<span class="token ${isNaN($1)?`v`:`n`}">${$1}</span>`

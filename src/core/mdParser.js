@@ -40,12 +40,12 @@ const Markdown = (function () {
             modules.blockListify(...bundle);
             modules.images(...bundle);
             modules.anchors(...bundle);
+            modules.table(...bundle);
             modules.paragraphs(...bundle);
             this.br();
             this.italicBold();
             this.altImages();
             this.altAnchors();
-            this.altTable();
         }
 
         this.readBlockUnit = function (){
@@ -65,8 +65,18 @@ const Markdown = (function () {
         }
 
         this.codeBlock = function(md){
-            if(md.match(/(\`+|\~+)/gm)){
-                return md.replace(/(\`+|\~+)([\w]+\n)?([\s\S]+?)(\`+|\~+)/gm, (a,dotted,lang,content)=>{
+            if(md.match(/(\`+)([\s\S]+)(\`+)|(\~+)[^\s]([\s\S]+)[^\s](\~+)/gm)){
+                return md.replace(/(\`+)([\w]+\n)?([\s\S]+?)(\`+)/gm, (a,dotted,lang,content)=>{
+                    let count = dotted.split('').length;
+                    let contents = codeBlockParser.parse(content.trim(), lang);
+                    let lines = [...new DOMParser().parseFromString(contents, 'text/html').body.children];
+                    let lcount = 1;
+                    if(!lang && count<3){
+                        return `<kbd>${content.trim()}</kbd>`;
+                    } else {
+                        return `<pre class="parse-code"><code class="number" lang="${lang.trim()}">${new Array(lines.length).fill(0).map((l,i)=>`<div class="token line">${lines[i].innerHTML==''?'':lcount++}</div>`).join('')}</code><code lang="${lang.trim()}">${contents}</code></pre>`;
+                    }
+                }).replace(/(\~+)[^\s]([\w]+\n)?([\s\S]+?)[^\s](\~+)/gm, (a,dotted,lang,content)=>{
                     let count = dotted.split('').length;
                     let contents = codeBlockParser.parse(content.trim(), lang);
                     let lines = [...new DOMParser().parseFromString(contents, 'text/html').body.children];
@@ -108,23 +118,12 @@ const Markdown = (function () {
 
         this.italicBold = function (){
             convertedHTML = convertedHTML.map(x=>{
-                console.log(x);
                 if(/(\*+)([\s\S]+?)\*+/g)
                 return x.replace(/(\*{1,3})([\s\S]+?)\*{1,3}/g, (a,$1,$2)=>{
                     return `${$1.length==2?`<em>`:`<b>${$1.length==3?`<em>`:``}`}${$2}${$1.length!=2?`</b>${$1.length==3?`</em>`:``}`:`</em>`}`
                 });
                 else return x;
             });
-        }
-        
-        this.altTable = function (){
-            // convertedHTML = convertedHTML.map(x=>{
-            //     if(/(\*+)([\s\S]+?)\*+/g)
-            //     return x.replace(/(\*{1,3})([\s\S]+?)\*{1,3}/g, (a,$1,$2)=>{
-            //         return `${$1.length==2?`<em>`:`<b>${$1.length==3?`<em>`:``}`}${$2}${$1.length!=2?`</b>${$1.length==3?`</em>`:``}`:`</em>`}`
-            //     });
-            //     else return x;
-            // });
         }
 
         this.addClass = function (str){

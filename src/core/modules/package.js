@@ -2,7 +2,7 @@
 
 export const horizontal = function (block, convertedHTML, options){
     block.forEach((line, id)=>{
-        if(line.match(/(\-{3,}|\*{3,}|\={3,})/gm)){
+        if(line.match(/^(\-{3,}|\={3,}|\*{3,})(?=\s*)$/gm)){
             convertedHTML[id] = line.replace(/^(\-{3,}|\={3,}|\*{3,})(?=\s*)$/gm, (a,$1,$2)=>{
                 return `<hr class="hr">`
             });
@@ -105,6 +105,105 @@ export const anchors = function(block, convertedHTML, options) {
             convertedHTML[id] = `<a href="${$2}"${$3?` title="${$3.replace(/[\'\"]+/gm,'').trim()}"`:''}>${$1}</a>`;
             block[id] = '';
         }
+    });
+}
+
+export const table = function(block, convertedHTML, options) {
+    block.forEach((line, id)=>{
+        let table = document.createElement('table');
+        let thead = document.createElement('thead');
+        let tbody = document.createElement('tbody');
+        let toHead = false;
+        let classes;
+        if(line.match(/(\|.+\|)/g)){
+            let rows = line.split(/\n/g);
+            rows = rows.map(row=>row.split(/\|/g));
+
+            rows = rows.map(r=>{
+                if(r[0]==''){
+                    r = r.slice(1);
+                }
+
+                if(r[r.length-1]==''){
+                    r = r.slice(0, -1);
+                }
+
+                if(r[0].match(/\{\:(.+)\}/g)){
+                    classes = r.pop().replace(/[\{\:\}]/g, '').split('.').filter(x=>x!='');
+                }
+
+                return r;
+            }).filter(x=>x.length>0);
+
+            rows.map(row=>{
+                let tr = document.createElement('tr');
+                if(row[0].match(/\-{3,}/g)){
+                    toHead = true;
+                    return '';
+                }
+                if(!toHead){
+                    tr.append(...row.map(cols=>{
+                        let th = document.createElement('th');
+                        th.innerHTML = cols;
+                        return th;
+                    }));
+                    thead.append(tr);
+                } else {
+                    tr.append(...row.map(cols=>{
+                        let td = document.createElement('td');
+                        td.innerHTML = cols;
+                        return td;
+                    }));
+                    tbody.append(tr);
+                }
+            });
+
+            [...tbody.children].forEach((tr, rid, oo)=>{
+                let continues = null;
+                let colspan = 1;
+                [...tr.children].forEach((td, did, o)=>{
+                    if(td.innerHTML.trim()==''){
+                        if(continues==null) continues = o[did-1];
+                        colspan++;
+                        td.remove();
+
+                        if(o.indexOf(td)==o.length-1){
+                            colspan--;
+                        }
+
+                        if(colspan>1){
+                            continues.setAttribute('colspan', colspan);
+                        }
+                    }
+
+                    if(td.innerHTML.trim()!='') {
+                        continues = null;
+                        colspan = 1;
+                    }
+
+                    if(td.innerHTML.match(/\^{2,}/g)){
+                        if(tbody.children[rid-1].children[did]){
+                            tbody.children[rid-1].children[did].setAttribute('rowspan', 2);
+                        } else {
+                            console.log(tbody.children[rid-1].children[tbody.children[rid-1].children.length-1])
+                            tbody.children[rid-1].children[tbody.children[rid-1].children.length-1].setAttribute('rowspan', 2);
+                        }
+                        td.remove();
+                    }
+                });
+            })
+
+            table.append(thead, tbody);
+            
+            if(classes) table.classList.add(classes);
+
+            convertedHTML[id] = table.outerHTML;
+            block[id] = '';
+        }
+        // if(line!=''){
+        //     convertedHTML[id] = `<p>${line}</p>`;
+        //     // block[id] = '';
+        // }
     });
 }
 
