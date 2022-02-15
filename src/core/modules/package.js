@@ -115,10 +115,11 @@ export const blockListify = function (block, convertedHTML, options){
 
 export const images = function(block, convertedHTML, options) {
     block.forEach((line, id)=>{
-        if(line.match(/\!\[/gm)){
+        if(line.match(/\!\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣\?\=]+)(\s.+)?\)/gm)){
             let [origin, attrs, classes] = addClass(line);
             line = origin||line;
-            const [a,$1,$2,$3] = line.match(/\!\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣]+)(\s.+)?\)/);
+            console.log(line)
+            const [a,$1,$2,$3] = line.match(/\!\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣\?\=]+)(\s.+)?\)/);
             convertedHTML[id] = `<figure ${attrs||''} class="${classes||''}"><img src="${$2}" alt="${$1}"${$3?` title="${$3.replace(/[\'\"]+/gm,'').trim()}"`:''}></figure>`;
             block[id] = '';
         }
@@ -127,10 +128,10 @@ export const images = function(block, convertedHTML, options) {
 
 export const anchors = function(block, convertedHTML, options) {
     block.forEach((line, id)=>{
-        if(line.match(/\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣]+)(\s.+)?\)/gm)){
+        if(line.match(/\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣\?\=]+)(\s.+)?\)/gm)){
             let [origin, attrs, classes] = addClass(line);
             line = origin||line;
-            const [a,$1,$2,$3] = line.match(/\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣]+)(\s.+)?\)/m);
+            const [a,$1,$2,$3] = line.match(/\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣\?\=]+)(\s.+)?\)/m);
             convertedHTML[id] = `<a ${attrs||''} href="${$2}"${$3?` title="${$3.replace(/[\'\"]+/gm,'').trim()}"`:''} class="${classes||''}">${$1}</a>`;
             block[id] = '';
         }
