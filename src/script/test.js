@@ -70,6 +70,12 @@ let test = (a) => {
 |구분|완성형|
 |---|---|
 |테스트|와우|
+|^^|qweqwe|
+|^^|qweqwe|
+|qweqwe|qweqwe|
+|^^|qwqweqwe|
+|^^|qwqweqwe|
+|^^|qwqweqwe|
 
 ## 헤딩은 기존의 마크다운과 동일한 방식입니다.
 

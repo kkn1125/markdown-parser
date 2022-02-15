@@ -1,4 +1,5 @@
 import {test} from './test.js'
+import {Markdown} from '../core/mdParser.js'
 
 document.querySelector('main').innerHTML = Markdown.parse(test, {
     ol: 'list-group reset',

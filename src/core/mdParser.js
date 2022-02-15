@@ -8,7 +8,7 @@
 import * as modules from './modules/package.js'
 import codeBlockParser from './modules/codeBlockParser.js'
 
-const Markdown = (function () {
+export const Markdown = (function () {
     function Parser() {
         let options, markdown, block, temp, bundle;
         let convertedHTML = [];
@@ -151,5 +151,3 @@ const Markdown = (function () {
         }
     }
 })();
-
-window.Markdown = Markdown;

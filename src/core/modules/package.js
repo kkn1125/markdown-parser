@@ -158,6 +158,10 @@ export const table = function(block, convertedHTML, options) {
                 }
             });
 
+            let rowspan = 1;
+            let rowContinus = null;
+            let removeRowTd = [];
+            let basedid = 0;
             [...tbody.children].forEach((tr, rid, oo)=>{
                 let continues = null;
                 let colspan = 1;
@@ -182,16 +186,25 @@ export const table = function(block, convertedHTML, options) {
                     }
 
                     if(td.innerHTML.match(/\^{2,}/g)){
-                        if(tbody.children[rid-1].children[did]){
-                            tbody.children[rid-1].children[did].setAttribute('rowspan', 2);
+                        if(basedid==-1) basedid = did;
+                    }
+
+                    if(basedid == did){
+                        if(tbody.children[rid]?.children[basedid]?.innerHTML?.match(/\^{2,}/g)){
+                            if(rowContinus == null) rowContinus = tbody.children[rid-1].children[basedid];
+
+                            if(rowContinus) rowspan++;
+                            removeRowTd.push(td);
+
+                            if(rowContinus) rowContinus.setAttribute('rowspan', rowspan);
                         } else {
-                            console.log(tbody.children[rid-1].children[tbody.children[rid-1].children.length-1])
-                            tbody.children[rid-1].children[tbody.children[rid-1].children.length-1].setAttribute('rowspan', 2);
+                            rowContinus = null;
+                            rowspan = 1;
                         }
-                        td.remove();
                     }
                 });
-            })
+            });
+            removeRowTd.forEach(el=>el.remove());
 
             table.append(thead, tbody);
             
