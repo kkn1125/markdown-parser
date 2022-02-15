@@ -1,5 +1,25 @@
 'use strict';
 
+function addClass (line){
+    if(line?.match(/\{\:(.+)\}/g)){
+        let origin = line.match(/\{\:(.+)\}/g).pop();
+        let classes = origin.replace(/\{\:(.+)\}/g, '$1').split(/[\.]/g).filter(x=>x!='');
+
+        line = line.replace(/\{\:(.+)\}/g, '');
+
+        let attrs = [];
+
+        classes.forEach((el,i)=>{
+            if(el.match(/\=/g)) attrs.push(classes.splice(i, 1).pop());
+        });
+
+        if(attrs.length>0)
+        attrs = attrs.pop().split(',');
+
+        return [line, attrs||'', classes.join(' ')||''];
+    } else return '';
+}
+
 export const horizontal = function (block, convertedHTML, options){
     block.forEach((line, id)=>{
         if(line.match(/^(\-{3,}|\={3,}|\*{3,})(?=\s*)$/gm)){
@@ -13,10 +33,12 @@ export const horizontal = function (block, convertedHTML, options){
 
 export const heading = function (block, convertedHTML, options){
     block.forEach((line, id)=>{
-        if(line.match(/(\#+)/gm)){
+        if(line.match(/^(\#+)/gm)){
             convertedHTML[id] = line.replace(/[\s\n]*(\#+)(.+)/gm, (a,$1,$2)=>{
+                let [origin, attrs, classes] = addClass($1);
+                $1 = origin||$1;
                 let count = $1.split('').length;
-                return `<h${count}${options.h?` class="h${count}"`:''}>${$2.replace(/^[\s]*/g, '')}</h${count}>`
+                return `<h${count} class="${options.h?`h${count}`:''} ${classes||''}" ${attrs||''}>${$2.replace(/^[\s]*/g, '')}</h${count}>`
             });
             block[id] = '';
         }
@@ -66,10 +88,13 @@ export const blockListify = function (block, convertedHTML, options){
                     }
                 }
 
+                let [origin, attrs, classes] = addClass(li);
+                li = origin||li;
+
                 if(li.match(/^\s*\>\s.+/g)){
                     temp += `${checkbox(li.replace(/^\s*\>\s(.+)/gm, '$1'))}`;
                 } else {
-                    temp += `<li>${checkbox(li.replace(/^\s*[0-9]\.\s*(.+)/gm, '$1').replace(/^\s*\-\s*(.+)/gm, '$1'))}</li>`;
+                    temp += `<li ${attrs||''} class="${classes||''}">${checkbox(li.replace(/^\s*[0-9]\.\s*(.+)/gm, '$1').replace(/^\s*\-\s*(.+)/gm, '$1'))}</li>`;
                 }
                 
                 before = indent;
@@ -91,8 +116,10 @@ export const blockListify = function (block, convertedHTML, options){
 export const images = function(block, convertedHTML, options) {
     block.forEach((line, id)=>{
         if(line.match(/\!\[/gm)){
+            let [origin, attrs, classes] = addClass(line);
+            line = origin||line;
             const [a,$1,$2,$3] = line.match(/\!\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣]+)(\s.+)?\)/);
-            convertedHTML[id] = `<figure><img src="${$2}" alt="${$1}"${$3?` title="${$3.replace(/[\'\"]+/gm,'').trim()}"`:''}></figure>`;
+            convertedHTML[id] = `<figure ${attrs||''} class="${classes||''}"><img src="${$2}" alt="${$1}"${$3?` title="${$3.replace(/[\'\"]+/gm,'').trim()}"`:''}></figure>`;
             block[id] = '';
         }
     });
@@ -101,8 +128,10 @@ export const images = function(block, convertedHTML, options) {
 export const anchors = function(block, convertedHTML, options) {
     block.forEach((line, id)=>{
         if(line.match(/\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣]+)(\s.+)?\)/gm)){
+            let [origin, attrs, classes] = addClass(line);
+            line = origin||line;
             const [a,$1,$2,$3] = line.match(/\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣]+)(\s.+)?\)/m);
-            convertedHTML[id] = `<a href="${$2}"${$3?` title="${$3.replace(/[\'\"]+/gm,'').trim()}"`:''}>${$1}</a>`;
+            convertedHTML[id] = `<a ${attrs||''} href="${$2}"${$3?` title="${$3.replace(/[\'\"]+/gm,'').trim()}"`:''} class="${classes||''}">${$1}</a>`;
             block[id] = '';
         }
     });
@@ -115,8 +144,25 @@ export const table = function(block, convertedHTML, options) {
         let tbody = document.createElement('tbody');
         let toHead = false;
         let classes;
-        if(line.match(/(\|.+\|)/g)){
+        if(line.match(/(\{\:.+\})?(\|.+\|)(\{\:.+\})?/g)){
             let rows = line.split(/\n/g);
+            let classify;
+            if(rows[0].match(/^\|{0}\{\:.+\}/g)){
+                classify = rows.shift();
+            } else if(rows[rows.length-1].match(/^\|{0}\{\:.+\}/g)){
+                classify = rows.pop();
+            }
+
+            let [origins, attrss, classess] = addClass(classify);
+
+            if(classess)
+            table.classList.add(...classess.split(' '));
+
+            attrss.forEach(attr=>{
+                let [k, v] = attr.split('=');
+                table.setAttribute(k, v.replace(/[\'\"]/g, ''));
+            });
+
             rows = rows.map(row=>row.split(/\|/g));
 
             rows = rows.map(r=>{
@@ -144,14 +190,38 @@ export const table = function(block, convertedHTML, options) {
                 if(!toHead){
                     tr.append(...row.map(cols=>{
                         let th = document.createElement('th');
+                        let [origin, attrs, classes] = addClass(cols);
+                        cols = origin||cols;
+
                         th.innerHTML = cols;
+                        if(classes)
+                        td.classList.add(...classes.split(' '));
+
+                        if(attrs){
+                            attrs.forEach(attr=>{
+                                let [k, v] = attr.split('=');
+                                th.setAttribute(k, v.replace(/[\'\"]/g, ''));
+                            });
+                        }
                         return th;
                     }));
                     thead.append(tr);
                 } else {
                     tr.append(...row.map(cols=>{
                         let td = document.createElement('td');
+                        let [origin, attrs, classes] = addClass(cols);
+                        cols = origin||cols;
+
                         td.innerHTML = cols;
+                        if(classes)
+                        td.classList.add(...classes.split(' '));
+
+                        if(attrs){
+                            attrs.forEach(attr=>{
+                                let [k, v] = attr.split('=');
+                                td.setAttribute(k, v.replace(/[\'\"]/g, ''));
+                            });
+                        }
                         return td;
                     }));
                     tbody.append(tr);

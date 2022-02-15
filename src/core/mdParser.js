@@ -46,6 +46,7 @@ export const Markdown = (function () {
             this.italicBold();
             this.altImages();
             this.altAnchors();
+            this.altSigns();
         }
 
         this.readBlockUnit = function (){
@@ -71,8 +72,10 @@ export const Markdown = (function () {
                     let contents = codeBlockParser.parse(content.trim(), lang);
                     let lines = [...new DOMParser().parseFromString(contents, 'text/html').body.children];
                     let lcount = 1;
+                    let [origin, attrs, classes] = this.addClass(content);
+                    content = origin||content;
                     if(!lang && count<3){
-                        return `<kbd>${content.trim()}</kbd>`;
+                        return `<kbd ${attrs||''} class="${classes||''}">${content.trim()}</kbd>`;
                     } else {
                         return `<pre class="parse-code"><code class="number" lang="${lang.trim()}">${new Array(lines.length).fill(0).map((l,i)=>`<div class="token line">${lines[i].innerHTML==''?'':lcount++}</div>`).join('')}</code><code lang="${lang.trim()}">${contents}</code></pre>`;
                     }
@@ -81,8 +84,10 @@ export const Markdown = (function () {
                     let contents = codeBlockParser.parse(content.trim(), lang);
                     let lines = [...new DOMParser().parseFromString(contents, 'text/html').body.children];
                     let lcount = 1;
+                    let [origin, attrs, classes] = this.addClass(content);
+                    content = origin||content;
                     if(!lang && count<3){
-                        return `<kbd>${content}</kbd>`;
+                        return `<kbd ${attrs||''} class="${classes||''}">${content}</kbd>`;
                     } else {
                         return `<pre class="parse-code"><code class="number" lang="${lang.trim()}">${new Array(lines.length).fill(0).map((l,i)=>`<div class="token line">${lines[i].innerHTML==''?'':lcount++}</div>`).join('')}</code><code lang="${lang.trim()}">${contents}</code></pre>`;
                     }
@@ -120,22 +125,64 @@ export const Markdown = (function () {
             convertedHTML = convertedHTML.map(x=>{
                 if(/(\*+)([\s\S]+?)\*+/g)
                 return x.replace(/(\*{1,3})([\s\S]+?)\*{1,3}/g, (a,$1,$2)=>{
-                    return `${$1.length==2?`<em>`:`<b>${$1.length==3?`<em>`:``}`}${$2}${$1.length!=2?`</b>${$1.length==3?`</em>`:``}`:`</em>`}`
+                    let [origin, attrs, classes] = this.addClass($2);
+                    $2 = origin||$2;
+                    return `${$1.length==2?`<em class="${classes||''}" ${attrs||''}>`:`<b class="${classes||''}" ${attrs||''}>${$1.length==3?`<em>`:``}`}${$2}${$1.length!=2?`</b>${$1.length==3?`</em>`:``}`:`</em>`}`
                 });
                 else return x;
             });
         }
 
-        this.addClass = function (str){
-            let classes;
-            if(str.match(/\{\:(.+)\}/g)){
-                classes = str.match(/\{\:(.+)\}/)[1];
-                str = str.replace(/\{\:(.+)\}/g,'');
+        this.addClass = function (line){
+            if(line?.match(/\{\:(.+)\}/g)){
+                let origin = line.match(/\{\:(.+)\}/g).pop();
+                let classes = origin.replace(/\{\:(.+)\}/g, '$1').split(/[\.]/g).filter(x=>x!='');
 
-                return classes.split('.').filter(x=>x!='').join(' ');
-            } else {
-                return null;
-            }
+                line = line.replace(/\{\:(.+)\}/g, '');
+
+                let attrs = [];
+
+                classes.forEach((el,i)=>{
+                    if(el.match(/\=/g)) attrs.push(classes.splice(i, 1).pop());
+                });
+
+                if(attrs.length>0)
+                attrs = attrs.pop().split(',');
+
+                return [line, attrs||'', classes.join(' ')||''];
+            } else return '';
+        }
+
+        this.altSigns = function (){
+            convertedHTML = convertedHTML.map(line=>{
+                line = line
+                .replace(/\<\=\=\>/gm, `&DoubleLeftRightArrow;`)
+                .replace(/\<\-\>/gm, `&LeftArrowRightArrow;`)
+                .replace(/\-\>/gm, `&#129046;`)
+                .replace(/\<\-/gm, `&#129044;`)
+                .replace(/\=\=\>/gm, `&Rightarrow;`)
+                .replace(/\<\=\=/gm, `&Leftarrow;`)
+                .replace(/\=\=\=/gm, `⩶`)
+                .replace(/\=\=/gm, `⩵`)
+                .replace(/\>\=/gm, `⪴`)
+                .replace(/\<\=/gm, `⪳`)
+                .replace(/\!\=/gm, `≠`)
+                .replace(/\(\:prj\)/gm, `📋`)
+                .replace(/\(\:1\)/gm, `🥇`)
+                .replace(/\(\:2\)/gm, `🥈`)
+                .replace(/\(\:3\)/gm, `🥉`)
+                .replace(/\(\:(x|X)\)/gm, `❌`)
+                .replace(/\(\:(v|V)\)/gm, `✅`)
+                .replace(/\(\:\)\)|\(웃음\)/gm, `😀`)
+                .replace(/\(ㅠㅠ\)|\(슬픔\)/gm, `😥`)
+                .replace(/\(화남\)/gm, `😤`)
+                .replace(/\(꾸벅\)|\(인사\)/gm, `🙇‍♂️`)
+                .replace(/\(\:\!\!\)/gm, `💡`)
+                .replace(/\(\:\!\)/gm, `❗`)
+                .replace(/\(\:\?\)/gm, `❓`)
+                ;
+                return line;
+            })
         }
     }
 
