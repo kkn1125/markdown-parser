@@ -69,9 +69,9 @@ let test = (a) => {
 
 |구분|완성형{:width="250"}|
 |---|---|
-|테스트|와우|
+|테스트|와우==> <-> <==> >= <= !=|
 |^^|qweqwe{:test="123",wow="123"}|
-|^^|qweqwe|
+|^^|qweqwe(:!)(:?)|
 |qweqwe|qweqwe|
 |^^|qwqweqwe|
 |^^|qwqweqwe|

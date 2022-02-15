@@ -155,17 +155,18 @@ export const Markdown = (function () {
 
         this.altSigns = function (){
             convertedHTML = convertedHTML.map(line=>{
+                console.log(line)
                 line = line
-                .replace(/\<\=\=\>/gm, `&DoubleLeftRightArrow;`)
-                .replace(/\<\-\>/gm, `&LeftArrowRightArrow;`)
-                .replace(/\-\>/gm, `&#129046;`)
-                .replace(/\<\-/gm, `&#129044;`)
-                .replace(/\=\=\>/gm, `&Rightarrow;`)
-                .replace(/\<\=\=/gm, `&Leftarrow;`)
-                .replace(/\=\=\=/gm, `⩶`)
-                .replace(/\=\=/gm, `⩵`)
-                .replace(/\>\=/gm, `⪴`)
-                .replace(/\<\=/gm, `⪳`)
+                .replace(/\<\=\=\>|&lt;\=\=&gt;/gm, `&DoubleLeftRightArrow;`)
+                .replace(/\<\-\>|&lt;\-&gt;/gm, `&LeftArrowRightArrow;`)
+                .replace(/\-\>|\-&gt;/gm, `&#129046;`)
+                .replace(/\<\-|&lt;\-/gm, `&#129044;`)
+                .replace(/\=\=\>|\=\=&gt;/gm, `&Rightarrow;`)
+                .replace(/\<\=\=|&lt;\=\=/gm, `&Leftarrow;`)
+                .replace(/\=\=\=|\=\=\=/gm, `⩶`)
+                .replace(/\=\=|\=\=/gm, `⩵`)
+                .replace(/\>\=|&gt;\=/gm, `⪴`)
+                .replace(/\<\=|&lt;\=/gm, `⪳`)
                 .replace(/\!\=/gm, `≠`)
                 .replace(/\(\:prj\)/gm, `📋`)
                 .replace(/\(\:1\)/gm, `🥇`)
