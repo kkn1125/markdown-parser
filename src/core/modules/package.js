@@ -158,6 +158,7 @@ export const table = function(block, convertedHTML, options) {
             if(classess)
             table.classList.add(...classess.split(' '));
 
+            if(attrss)
             attrss.forEach(attr=>{
                 let [k, v] = attr.split('=');
                 table.setAttribute(k, v.replace(/[\'\"]/g, ''));
