@@ -174,8 +174,8 @@ export const table = function(block, convertedHTML, options) {
                 if(r[r.length-1]==''){
                     r = r.slice(0, -1);
                 }
-
-                if(r[0].match(/\{\:(.+)\}/g)){
+                
+                if(r[0]?.match(/\{\:(.+)\}/g)){
                     classes = r.pop().replace(/[\{\:\}]/g, '').split('.').filter(x=>x!='');
                 }
 
