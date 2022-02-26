@@ -155,12 +155,11 @@ export const Markdown = (function () {
 
         this.altSigns = function (){
             convertedHTML = convertedHTML.map(line=>{
-                console.log(line)
                 line = line
                 .replace(/\<\=\=\>|&lt;\=\=&gt;/gm, `&DoubleLeftRightArrow;`)
                 .replace(/\<\-\>|&lt;\-&gt;/gm, `&LeftArrowRightArrow;`)
-                .replace(/\-\>|\-&gt;/gm, `&#129046;`)
-                .replace(/\<\-|&lt;\-/gm, `&#129044;`)
+                .replace(/\-\>|\-&gt;/gm, `&#8594;`)
+                .replace(/\<\-|&lt;\-/gm, `&#8592;`)
                 .replace(/\=\=\>|\=\=&gt;/gm, `&Rightarrow;`)
                 .replace(/\<\=\=|&lt;\=\=/gm, `&Leftarrow;`)
                 .replace(/\=\=\=|\=\=\=/gm, `⩶`)
@@ -168,6 +167,7 @@ export const Markdown = (function () {
                 .replace(/\>\=|&gt;\=/gm, `⪴`)
                 .replace(/\<\=|&lt;\=/gm, `⪳`)
                 .replace(/\!\=/gm, `≠`)
+                .replace(/\.\.\./gm, `…`)
                 .replace(/\(\:prj\)/gm, `📋`)
                 .replace(/\(\:1\)/gm, `🥇`)
                 .replace(/\(\:2\)/gm, `🥈`)
