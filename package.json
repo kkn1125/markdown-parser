@@ -1,0 +1,23 @@
+{
+  "name": "markdown-parser",
+  "description": "자바스크립트 마크다운 파서",
+  "version": "1.0.0",
+  "main": "vite.config.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/parser": "^7.23.3",
+    "@babel/preset-env": "^7.23.3",
+    "babel-plugin-module-resolver": "^5.0.0",
+    "dotenv": "^16.3.1",
+    "eslint-import-resolver-alias": "^1.1.2",
+    "eslint-plugin-import": "^2.29.0",
+    "path": "^0.12.7",
+    "vite": "^4.5.0"
+  }
+}

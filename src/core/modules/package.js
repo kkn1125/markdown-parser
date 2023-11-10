@@ -118,7 +118,7 @@ export const images = function(block, convertedHTML, options) {
         if(line.match(/\!\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣\?\=]+)(\s.+)?\)/gm)){
             let [origin, attrs, classes] = addClass(line);
             line = origin||line;
-            console.log(line)
+            // console.log(line)
             const [a,$1,$2,$3] = line.match(/\!\[(.+)\]\(([A-z0-9\.\:\@\/\-\_ㄱ-힣\?\=]+)(\s.+)?\)/);
             convertedHTML[id] = `<figure ${attrs||''} class="${classes||''}"><img src="${$2}" alt="${$1}"${$3?` title="${$3.replace(/[\'\"]+/gm,'').trim()}"`:''}></figure>`;
             block[id] = '';
